@@ -224,7 +224,7 @@
   /* =========================================
      雲端 API 閘道密碼驗證 (GET 暢通版)
      ========================================= */
-  // ⚠️ 貼上您的 API 網址：
+  // 🎉 已經為您完美鑲嵌專屬 API 網址！
   const API_URL = "https://script.google.com/macros/s/AKfycbwcau_cc1mn01ghf-p7wfyCLDrVEBHJnEq2UJ1Z42_7ztyxjgGgA6wECQgMwegUSyOkBQ/exec"; 
 
   async function verifyLogin() {
@@ -254,7 +254,7 @@
       }
     } catch(e) {
       msgDiv.style.color = "#ef476f";
-      msgDiv.innerText = "伺服器連線中斷，請確認網址是否正確。";
+      msgDiv.innerText = "伺服器連線中斷，請確認網路狀態。";
       btn.innerText = "登入驗證";
       btn.disabled = false;
     }
@@ -277,7 +277,7 @@
       
       if (excelData.length < 2) { alert("Excel 檔案內容為空或格式錯誤！"); return; }
 
-      const clientName = excelData[1][16] || "測試客戶"; 
+      const clientName = excelData[1][16] || "尊榮客戶"; 
       const birthdayVal = excelData[1][17]; 
       
       const today = new Date();
@@ -328,7 +328,6 @@
   let globalData = null, assetChart = null, radarChartObj = null, simChartInstance = null;
   const COLORS = ['#64ffda', '#118ab2', '#ffd166', '#ef476f', '#06d6a0', '#7209b7'];
   
-  // 用於儲存 AI 建議值的快取變數
   let optimalSafeCache = 0; 
   let optimalRiskCache = 0; 
 
@@ -441,7 +440,6 @@
     document.getElementById('policy-body').innerHTML = tH;
   }
 
-  // [修正 1] 累積資產變化曲線
   function renderAssetChart(data, target, totalR, yR, rate) {
     if (assetChart) assetChart.destroy();
     const annualSpend = Number(document.getElementById('expectPension').value) * 12;
@@ -494,7 +492,6 @@
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   }
 
-  // [V88.00] 運算核心：更新勞退 (FV) 邏輯 & 輸入下限保護
   function runSimulation() {
     const ageNow = Number(document.getElementById('simAgeNow').value) || 57;
     let ageRetire = Number(document.getElementById('simAgeRetire').value) || 65;
@@ -508,18 +505,14 @@
     const mu = Number(document.getElementById('simMu').value) / 100;
     const sigma = 0.07;
     
-    // [UI] 讀取新欄位
     const hasSelf = document.getElementById('hasSelfContrib').checked;
     const lpRate = Number(document.getElementById('lpRate').value) / 100;
-    // [修正 2] 提領金額不能低於下限
     let inputSpend = Number(document.getElementById('monthlySpend').value);
     
-    // 1. 勞保
     const diff = ageRetire - 65;
     let factor = Math.max(0.8, Math.min(1.2, 1 + (diff * 0.04)));
     const liMonth = Math.round(avgInsSalary * yearsLI * 0.0155 * factor);
     
-    // 2. 勞退 (DC) - FV 公式應用
     const yearsToRetire = Math.max(0, ageRetire - ageNow);
     const contribRate = hasSelf ? 0.12 : 0.06;
     const lpContrib = Math.min(currentSalary, 150000) * contribRate;
@@ -568,7 +561,7 @@
         let gap = 0;
         if (effectiveSpend > baseIncome) {
             if (age < 85) gap = effectiveSpend - baseIncome;
-            else gap = effectiveSpend - liMonth; // 85歲後勞退歸零
+            else gap = effectiveSpend - liMonth; 
         } else {
             if (age >= 85 && effectiveSpend > liMonth) gap = effectiveSpend - liMonth;
         }

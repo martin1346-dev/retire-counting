@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <base target="_top">
+  <title>V88.8 退休推算戰情室</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700&display=swap" rel="stylesheet">
@@ -52,7 +54,6 @@
     .apply-btn { background: #64ffda; color: #0a192f; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; white-space: nowrap; margin-left: 10px;}
     @media (max-width: 900px) { .sim-main-grid, .sim-ai-grid { grid-template-columns: 1fr; } .ai-card { flex-direction: column; align-items: start; gap: 10px; } .control-panel { grid-template-columns: repeat(3, 1fr); } .main-layout, .layout-cell { display: block; width: 100%; } .launch-btn { position: static; width: 100%; margin-top: 10px; } }
 
-    /* === [新增] 登入牆專屬樣式 === */
     #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a192f; z-index: 9999; display: flex; justify-content: center; align-items: center; }
     .login-box { background: #112240; padding: 40px; border-radius: 12px; text-align: center; border: 1px solid #64ffda; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
     .login-input { background: #0a192f; border: 1px solid #233554; color: #64ffda; padding: 12px; width: 100%; box-sizing: border-box; border-radius: 6px; margin-bottom: 20px; font-size: 16px; text-align: center;}
@@ -218,6 +219,7 @@
     </div>
   </div>
 </div>
+
 <script>
   /* =========================================
      雲端 API 閘道密碼驗證 (GET 暢通版)
@@ -238,7 +240,6 @@
     btn.disabled = true;
 
     try {
-      // 改用 GET 請求，將密碼掛在網址後方
       let response = await fetch(API_URL + "?authCode=" + encodeURIComponent(code));
       let result = await response.json();
 
@@ -253,7 +254,7 @@
       }
     } catch(e) {
       msgDiv.style.color = "#ef476f";
-      msgDiv.innerText = "伺服器連線中斷，請稍後再試。";
+      msgDiv.innerText = "伺服器連線中斷，請確認網址是否正確。";
       btn.innerText = "登入驗證";
       btn.disabled = false;
     }
@@ -328,10 +329,9 @@
   const COLORS = ['#64ffda', '#118ab2', '#ffd166', '#ef476f', '#06d6a0', '#7209b7'];
   
   // 用於儲存 AI 建議值的快取變數
-  let optimalSafeCache = 0; // 80% 成功率建議值
-  let optimalRiskCache = 0; // 50% 成功率建議值
+  let optimalSafeCache = 0; 
+  let optimalRiskCache = 0; 
 
-  // 1. 戰情室圖表輔助插件 (維持 V71/V83 原樣)
   const vLinePlugin = {
     id: 'vLine',
     afterDraw: (chart) => {
@@ -350,14 +350,11 @@
   };
 
   window.onload = function() {
-    // =========== [時間炸彈 Start] 已精準移除 ===========
-    
     ['targetGoal', 'annualIncome', 'accRate', 'wdrRate', 'expectPension', 'retireAge'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => { if(globalData) renderAll(globalData); });
     });
   };
 
-  // 3. 戰情室渲染邏輯 (維持 V83 原樣)
   function renderAll(data) {
     const rAge = Number(document.getElementById('retireAge').value) || 65;
     const target = Number(document.getElementById('targetGoal').value) || 1;
@@ -366,6 +363,7 @@
     const expectPMT = Number(document.getElementById('expectPension').value) || 0;
     const income = Number(document.getElementById('annualIncome').value) || 678132;
     const yR = Math.max(0, rAge - data.currentAge);
+    
     document.getElementById('show-years').innerText = yR;
     document.querySelectorAll('.retire-label').forEach(el => el.innerText = rAge);
 
@@ -443,7 +441,7 @@
     document.getElementById('policy-body').innerHTML = tH;
   }
 
-  // [修正 1] 累積資產變化曲線：退休後扣除支出 (Decumulation)
+  // [修正 1] 累積資產變化曲線
   function renderAssetChart(data, target, totalR, yR, rate) {
     if (assetChart) assetChart.destroy();
     const annualSpend = Number(document.getElementById('expectPension').value) * 12;
@@ -453,10 +451,8 @@
         for (let t = 0; t <= 60; t += 10) {
             let val = 0;
             if (t <= yR) {
-                // 累積期
                 val = presentVal * Math.pow(1 + r, t);
             } else {
-                // 提領期：逐年扣除年支出
                 let postRetireYears = t - yR;
                 let balance = totalR;
                 for(let k=0; k<postRetireYears; k++){
@@ -515,8 +511,9 @@
     // [UI] 讀取新欄位
     const hasSelf = document.getElementById('hasSelfContrib').checked;
     const lpRate = Number(document.getElementById('lpRate').value) / 100;
-    // [修正 2] 提領金額不能低於下限：僅運算使用，不覆寫輸入框
+    // [修正 2] 提領金額不能低於下限
     let inputSpend = Number(document.getElementById('monthlySpend').value);
+    
     // 1. 勞保
     const diff = ageRetire - 65;
     let factor = Math.max(0.8, Math.min(1.2, 1 + (diff * 0.04)));
@@ -524,12 +521,9 @@
     
     // 2. 勞退 (DC) - FV 公式應用
     const yearsToRetire = Math.max(0, ageRetire - ageNow);
-    // 2.1 提撥率判斷
     const contribRate = hasSelf ? 0.12 : 0.06;
     const lpContrib = Math.min(currentSalary, 150000) * contribRate;
     
-    // 2.2 累積期 (FV Formula)
-    // 存量(Balance)複利 + 流量(Contribution)年金終值
     let lpFuture = 0;
     if (lpRate === 0) {
          lpFuture = lpBalance + (lpContrib * 12 * yearsToRetire);
@@ -541,7 +535,6 @@
     const termYears = 85 - ageRetire;
     let lpMonth = 0;
     if (termYears > 0) {
-      // 提領期利率：使用面板設定的 mu (提領期報酬率)
       const rMonth = mu / 12;
       const nMonth = termYears * 12;
       if (rMonth === 0) lpMonth = lpFuture / nMonth;
@@ -551,15 +544,10 @@
     const baseIncome = liMonth + Math.round(lpMonth);
     document.getElementById('res-base-income').innerText = `$${baseIncome.toLocaleString()}`;
     
-    // 3. 有效支出地板 (Logic Floor)：運算時取 (輸入值, 基礎年金) 之大者
     let effectiveSpend = Math.max(inputSpend, baseIncome);
-    // ==========================================
-    // [新版] 4. 蒙地卡羅 (含 80/90/100 歲存活計數)
-    // ==========================================
     const simYears = 100 - ageRetire;
     let trajectories = [];
     
-    // 定義計數器：計算在該年齡時資產 > 0 的次數
     let count80 = 0;
     let count90 = 0;
     let count100 = 0;
@@ -568,9 +556,7 @@
       let balance = capital;
       let path = [balance];
       
-      // 標記單次模擬中，各個里程碑是否達標
       let alive80 = (ageRetire >= 80);
-      // 如果退休時已經超過80歲，預設存活
       let alive90 = (ageRetire >= 90);
       let alive100 = (ageRetire >= 100);
       
@@ -590,7 +576,6 @@
         balance -= (gap * 12);
         if (balance < 0) balance = 0;
 
-        // 檢查里程碑：若該歲數時餘額 > 0，則標記存活
         if (age === 80 && balance > 0) alive80 = true;
         if (age === 90 && balance > 0) alive90 = true;
         if (age === 100 && balance > 0) alive100 = true;
@@ -598,7 +583,6 @@
         path.push(balance);
       }
       
-      // 累加成功次數
       if (alive80) count80++;
       if (alive90) count90++;
       if (alive100) count100++;
@@ -606,22 +590,17 @@
       trajectories.push(path);
     }
 
-    // 計算並顯示百分比 (除以10 = 除以1000 * 100)
     document.getElementById('rate-80').innerText = (count80 / 10).toFixed(1) + '%';
     document.getElementById('rate-90').innerText = (count90 / 10).toFixed(1) + '%';
     document.getElementById('rate-100').innerText = (count100 / 10).toFixed(1) + '%';
     
-    // 為了相容下方的 AI 建議邏輯，我們使用 100 歲的成功率作為基準
     const successRate = count100 / 10;
     
-    // [V83.10 FIX 2]：AI 雙重機率建議 (80% / 50%)
-    // 計算邏輯：根據當前缺口與成功率，按比例逆推安全邊際
     let currentGap = Math.max(0, effectiveSpend - baseIncome);
-    // 穩健型 (80%)
     let safeFactor = (successRate >= 80) ? (1 + (successRate-80)/100) : (successRate / 85);
     let safeGap = currentGap * safeFactor;
     optimalSafeCache = Math.floor(baseIncome + safeGap);
-    // 積極型 (50%)
+    
     let riskFactor = (successRate >= 50) ? (1 + (successRate-50)/80) : (successRate / 55);
     let riskGap = currentGap * riskFactor;
     optimalRiskCache = Math.floor(baseIncome + riskGap);
@@ -639,12 +618,11 @@
     if(typeof renderSimChart === 'function') renderSimChart(trajectories.slice(0, 50), ageRetire);
   }
 
-  // 套用建議值輔助函數
   function applyVal(type) {
     let val = (type === 'safe') ? optimalSafeCache : optimalRiskCache;
     if (val > 0) {
       document.getElementById('monthlySpend').value = val;
-      runSimulation(); // 套用後立即運算
+      runSimulation(); 
     }
   }
 
@@ -659,7 +637,6 @@
     });
   }
 
-  // [修改] 原本為 google.script.run 寫回資料庫，現改為單機提示
   function saveToSheet() {
     alert('✅ 目前為高隱私雲端版，客戶數據不上傳，請直接參考畫面多次進行 80/50 建議試算。');
   }

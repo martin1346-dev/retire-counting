@@ -69,7 +69,7 @@
   <div class="login-box">
     <h2 style="color:#64ffda; margin-top:0;">VIP 財務戰略系統</h2>
     <p style="color:#8892b0; font-size:13px; margin-bottom:20px;">請輸入您的專屬授權碼</p>
-    <input type="password" id="auth-code" class="login-input" placeholder="Enter Auth Code">
+    <input type="text" id="auth-code" class="login-input" placeholder="請輸入授權碼 (如: VIP-888)">
     <button onclick="verifyLogin()" id="login-btn" class="login-btn">登入驗證</button>
     <div id="login-msg" style="color:#ef476f; margin-top:15px; font-size:13px; font-weight:bold;"></div>
   </div>
@@ -226,14 +226,15 @@
   /* =========================================
      雲端 API 閘道密碼驗證
      ========================================= */
-  const API_URL = "在此貼上您的_WEB_APP_URL"; 
+  const API_URL = "https://script.google.com/macros/s/AKfycbwcau_cc1mn01ghf-p7wfyCLDrVEBHJnEq2UJ1Z42_7ztyxjgGgA6wECQgMwegUSyOkBQ/exec"; 
 
   async function verifyLogin() {
-    const code = document.getElementById('auth-code').value;
+    // 確保這裡的字串前後沒有多餘的空白！
+    const code = document.getElementById('auth-code').value.trim(); 
     const msgDiv = document.getElementById('login-msg');
     const btn = document.getElementById('login-btn');
     
-    if (!code) { msgDiv.innerText = "請輸入授權碼！"; return; }
+    if (!code) { msgDiv.innerText = "請先輸入您的專屬授權碼！"; return; }
     
     msgDiv.style.color = "#8892b0";
     msgDiv.innerText = "連線驗證中，請稍候...";
@@ -241,10 +242,8 @@
     btn.disabled = true;
 
     try {
-      let response = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ authCode: code })
-      });
+      // 升級：改用 GET 請求，將密碼掛在網址後方，100% 避開 Google 跨域阻擋
+      let response = await fetch(API_URL + "?authCode=" + encodeURIComponent(code));
       let result = await response.json();
 
       if (result.success) {
@@ -258,7 +257,7 @@
       }
     } catch(e) {
       msgDiv.style.color = "#ef476f";
-      msgDiv.innerText = "伺服器連線失敗，請檢查網路。";
+      msgDiv.innerText = "伺服器連線中斷，請稍後再試。";
       btn.innerText = "登入驗證";
       btn.disabled = false;
     }

@@ -218,10 +218,9 @@
     </div>
   </div>
 </div>
-
 <script>
   /* =========================================
-     [新增] 雲端 API 閘道密碼驗證 (GET 暢通版)
+     雲端 API 閘道密碼驗證 (GET 暢通版)
      ========================================= */
   // ⚠️ 貼上您的 API 網址：
   const API_URL = "在此貼上您的_WEB_APP_URL"; 
@@ -261,7 +260,7 @@
   }
 
   /* =========================================
-     [新增] 前端解析 Excel 邏輯 
+     前端解析 Excel 邏輯 
      ========================================= */
   function handleExcelUpload(event) {
     const file = event.target.files[0];
@@ -322,7 +321,7 @@
     reader.readAsArrayBuffer(file);
   }
 
-/* =========================================
+  /* =========================================
      V88.00 Script (FV Logic & New Params)
      ========================================= */
   let globalData = null, assetChart = null, radarChartObj = null, simChartInstance = null;
@@ -334,8 +333,7 @@
 
   // 1. 戰情室圖表輔助插件 (維持 V71/V83 原樣)
   const vLinePlugin = {
-   
- id: 'vLine',
+    id: 'vLine',
     afterDraw: (chart) => {
       if (globalData) {
         const {ctx, scales: {x, y}} = chart;
@@ -344,36 +342,35 @@
         const xPos = x.getPixelForValue(yR / 10);
         ctx.save(); ctx.beginPath(); ctx.setLineDash([5, 5]);
         ctx.moveTo(xPos, y.top); ctx.lineTo(xPos, y.bottom);
-        ctx.lineWidth 
-= 1.5; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = '#ffffff'; ctx.stroke();
         ctx.fillStyle = '#ffffff'; ctx.font = '10px Noto Sans TC';
-ctx.fillText('退休年度', xPos + 5, y.top + 15); ctx.restore();
+        ctx.fillText('退休年度', xPos + 5, y.top + 15); ctx.restore();
       }
     }
   };
-window.onload = function() {
-    // =========== [時間炸彈 Start] 已移除 ===========
+
+  window.onload = function() {
+    // =========== [時間炸彈 Start] 已精準移除 ===========
     
     ['targetGoal', 'annualIncome', 'accRate', 'wdrRate', 'expectPension', 'retireAge'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => { if(globalData) renderAll(globalData); });
     });
-};
+  };
 
   // 3. 戰情室渲染邏輯 (維持 V83 原樣)
   function renderAll(data) {
-    const rAge = Number(document.getElementById('retireAge').value) ||
-65;
+    const rAge = Number(document.getElementById('retireAge').value) || 65;
     const target = Number(document.getElementById('targetGoal').value) || 1;
     const aRate = Number(document.getElementById('accRate').value) / 100;
     const wRate = Number(document.getElementById('wdrRate').value) / 100;
-const expectPMT = Number(document.getElementById('expectPension').value) || 0;
+    const expectPMT = Number(document.getElementById('expectPension').value) || 0;
     const income = Number(document.getElementById('annualIncome').value) || 678132;
     const yR = Math.max(0, rAge - data.currentAge);
-document.getElementById('show-years').innerText = yR;
+    document.getElementById('show-years').innerText = yR;
     document.querySelectorAll('.retire-label').forEach(el => el.innerText = rAge);
 
     let totalR = 0, sumS = 0, sumY = 0, totalProt = 0, weightedLiq = 0;
-data.policies.forEach((p) => {
+    data.policies.forEach((p) => {
       const v = p.values;
       let valAtRetire = 0;
       if (yR <= 1) valAtRetire = v[0];
@@ -382,8 +379,7 @@ data.policies.forEach((p) => {
         const decade = Math.floor(yR/10);
         const idx1 = Math.min(4, decade);
         const idx2 = Math.min(5, decade+1);
-        valAtRetire = v[idx1] 
-+ (v[idx2]-v[idx1])*((yR%10)/10);
+        valAtRetire = v[idx1] + (v[idx2]-v[idx1])*((yR%10)/10);
       }
       p._vRetire = valAtRetire * (p.currency === 'USD' ? 30 : 1);
       totalR += p._vRetire; 
@@ -392,40 +388,281 @@ data.policies.forEach((p) => {
       totalProt += (p.protectionValue * (p.currency === 'USD' ? 30 : 1));
       weightedLiq += (Math.min(1, p.paidYears / p.totalTerms) * p._vRetire);
     });
-const mAccRate = aRate / 12;
+
+    const mAccRate = aRate / 12;
     const gap = Math.max(0, target - totalR);
     let monthlySave = 0;
-if (gap > 0 && yR > 0) {
+    if (gap > 0 && yR > 0) {
        if (mAccRate <= 0) monthlySave = gap / (yR * 12);
-else monthlySave = gap / ((Math.pow(1 + mAccRate, yR * 12) - 1) / mAccRate);
-}
+       else monthlySave = gap / ((Math.pow(1 + mAccRate, yR * 12) - 1) / mAccRate);
+    }
     
     const mWdrRate = wRate / 12;
     let lonText = "--";
-const simWRate = Math.max(0.00001, mWdrRate); 
+    const simWRate = Math.max(0.00001, mWdrRate); 
     if (expectPMT <= target * simWRate) lonText = "永續領取";
-else {
+    else {
       const denom = expectPMT - (target * simWRate);
-if (denom > 0) {
+      if (denom > 0) {
         let n = Math.log(expectPMT / denom) / Math.log(simWRate + 1);
-lonText = Math.floor(rAge + (n / 12)) + " 歲";
-} else { lonText = (rAge + 1) + " 歲 (立即耗盡)";
-}
+        lonText = Math.floor(rAge + (n / 12)) + " 歲";
+      } else { lonText = (rAge + 1) + " 歲 (立即耗盡)"; }
     }
 
     document.getElementById('stat-total').innerText = `$${Math.round(totalR).toLocaleString()}`;
     document.getElementById('stat-pension-3').innerText = `${(wRate*100).toFixed(1)}% 生息：$${Math.round((target * wRate)/12).toLocaleString()}/月`;
     document.getElementById('stat-monthly-save').innerText = `$${Math.round(monthlySave).toLocaleString()}`;
-document.getElementById('stat-longevity').innerText = "可支領至：" + lonText;
+    document.getElementById('stat-longevity').innerText = "可支領至：" + lonText;
     document.getElementById('p1-val').innerText = Math.round((totalR/target)*100) + '%';
     document.getElementById('p1-bar').style.width = Math.min(100, (totalR/target)*100) + '%';
-renderAssetChart(data, target, totalR, yR, aRate);
+    
+    renderAssetChart(data, target, totalR, yR, aRate);
     const avgS = sumS / Math.max(1, data.policies.length);
     const avgY = sumY / Math.max(1, data.policies.length);
-const achSc = Math.min(10, (totalR/target)*10);
+    const achSc = Math.min(10, (totalR/target)*10);
     const protSc = Math.min(10, (totalProt / (income * 10)) * 10);
-const liqSc = (weightedLiq / (totalR || 1)) * 10;
+    const liqSc = (weightedLiq / (totalR || 1)) * 10;
     renderRadarChart(avgS, avgY, achSc, protSc, liqSc);
-document.getElementById('metric-body').innerHTML = `
+    
+    document.getElementById('metric-body').innerHTML = `
       <tr><td>🛡️ 安全性得分</td><td class="metric-value">${Math.round(avgS*10)/10} / 10</td></tr>
-      <tr><td>📈 獲利性得分</td>
+      <tr><td>📈 獲利性得分</td><td class="metric-value">${Math.round(avgY*10)/10} / 10</td></tr>
+      <tr><td>☂️ 家庭保障度</td><td class="metric-value">${Math.round(protSc*10)/10} / 10</td></tr>
+      <tr><td>💧 變現流動性</td><td class="metric-value">${Math.round(liqSc*10)/10} / 10</td></tr>
+    `;
+    
+    document.getElementById('advice-content').innerHTML = `<div class="advice-card" style="border-left:6px solid #64ffda">
+      <h4>💡 CFP 專業精算結論</h4>
+      <p>目標本金 <b>$${target.toLocaleString()}</b> 下每月領 <b>$${expectPMT.toLocaleString()}</b> 可支領至 <b>${lonText}</b>。目前缺口 <b>$${Math.round(gap).toLocaleString()}</b>，建議每月儲存 <b>$${Math.round(monthlySave).toLocaleString()}</b>。</p>
+    </div>`;
+    
+    let tH = "";
+    data.policies.forEach((p) => { 
+      tH += `<tr><td>${p.policyNo||'未編號'}</td><td>${p.name}</td><td style="text-align:right; font-weight:bold; color:#64ffda">$${Math.round(p._vRetire).toLocaleString()}</td></tr>`; 
+    });
+    document.getElementById('policy-body').innerHTML = tH;
+  }
+
+  // [修正 1] 累積資產變化曲線：退休後扣除支出 (Decumulation)
+  function renderAssetChart(data, target, totalR, yR, rate) {
+    if (assetChart) assetChart.destroy();
+    const annualSpend = Number(document.getElementById('expectPension').value) * 12;
+    const getComp = (r) => { 
+        let dataPoints = [];
+        let presentVal = totalR / Math.pow(1 + r, yR);
+        for (let t = 0; t <= 60; t += 10) {
+            let val = 0;
+            if (t <= yR) {
+                // 累積期
+                val = presentVal * Math.pow(1 + r, t);
+            } else {
+                // 提領期：逐年扣除年支出
+                let postRetireYears = t - yR;
+                let balance = totalR;
+                for(let k=0; k<postRetireYears; k++){
+                    balance = balance * (1 + r) - annualSpend;
+                    if(balance < 0) balance = 0;
+                }
+                val = balance;
+            }
+            dataPoints.push(val);
+        }
+        return dataPoints;
+    };
+    let cum = new Array(7).fill(0);
+    let ds = data.policies.map((p, i) => {
+      let lyr = [0, ...p.values].map((v, idx) => { cum[idx] += v*(p.currency==='USD'?30:1); return cum[idx]; });
+      return { label: p.name, data: lyr, fill: 'origin', backgroundColor: COLORS[i%6]+'cc', pointRadius: 0 };
+    });
+    ds.push({ label: '退休目標', data: Array(7).fill(target), borderColor: '#ff4d4d', borderWidth: 4, fill: false, pointRadius: 0, order: -100 });
+    ds.push({ label: '累積預測 (含提領)', data: getComp(rate), borderColor: '#ffd166', borderWidth: 2, fill: false, pointRadius: 0 });
+    
+    assetChart = new Chart(document.getElementById('assetChart'), { type: 'line', data: { labels: ['0年','10年','20年','30年','40年','50年','60年'], datasets: ds }, plugins: [vLinePlugin], options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff', boxWidth: 10 } } }, scales: { y: { beginAtZero: true, ticks: { color: '#fff', font: { size: 10 } }, grid: { color: '#233554' }, suggestedMax: target * 1.1 }, x: { ticks: { color: '#fff', font: { size: 10 } } } } } });
+  }
+
+  function renderRadarChart(s, y, a, p, l) {
+    if (radarChartObj) radarChartObj.destroy();
+    radarChartObj = new Chart(document.getElementById('radarChart'), { type: 'radar', data: { labels: ['安全性','獲利性','達成率','保障度','流動性'], datasets: [{ data: [s||0, y||0, a||0, p||0, l||0], backgroundColor: 'rgba(100,255,218,0.3)', borderColor: '#64ffda', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 10, pointLabels: { color: '#fff', font: { size: 10 } }, grid: { color: '#233554' }, ticks: { display: false } } }, plugins: { legend: { display: false } } } });
+  }
+
+  function toggleSim(show) {
+    const overlay = document.getElementById('sim-modal-overlay');
+    overlay.style.display = show ? 'block' : 'none';
+    if (show) runSimulation();
+  }
+
+  function randn_bm() {
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  // [V88.00] 運算核心：更新勞退 (FV) 邏輯 & 輸入下限保護
+  function runSimulation() {
+    const ageNow = Number(document.getElementById('simAgeNow').value) || 57;
+    let ageRetire = Number(document.getElementById('simAgeRetire').value) || 65;
+    if (ageRetire > 70) { ageRetire = 70; }
+    
+    const yearsLI = Number(document.getElementById('yearsLI').value);
+    const avgInsSalary = Math.min(Number(document.getElementById('avgInsSalary').value), 45800);
+    const currentSalary = Number(document.getElementById('currentSalary').value);
+    const lpBalance = Number(document.getElementById('currentLP').value);
+    const capital = Number(document.getElementById('simCapital').value);
+    const mu = Number(document.getElementById('simMu').value) / 100;
+    const sigma = 0.07;
+    
+    // [UI] 讀取新欄位
+    const hasSelf = document.getElementById('hasSelfContrib').checked;
+    const lpRate = Number(document.getElementById('lpRate').value) / 100;
+    // [修正 2] 提領金額不能低於下限：僅運算使用，不覆寫輸入框
+    let inputSpend = Number(document.getElementById('monthlySpend').value);
+    // 1. 勞保
+    const diff = ageRetire - 65;
+    let factor = Math.max(0.8, Math.min(1.2, 1 + (diff * 0.04)));
+    const liMonth = Math.round(avgInsSalary * yearsLI * 0.0155 * factor);
+    
+    // 2. 勞退 (DC) - FV 公式應用
+    const yearsToRetire = Math.max(0, ageRetire - ageNow);
+    // 2.1 提撥率判斷
+    const contribRate = hasSelf ? 0.12 : 0.06;
+    const lpContrib = Math.min(currentSalary, 150000) * contribRate;
+    
+    // 2.2 累積期 (FV Formula)
+    // 存量(Balance)複利 + 流量(Contribution)年金終值
+    let lpFuture = 0;
+    if (lpRate === 0) {
+         lpFuture = lpBalance + (lpContrib * 12 * yearsToRetire);
+    } else {
+         lpFuture = lpBalance * Math.pow(1 + lpRate, yearsToRetire) + 
+                    (lpContrib * 12 * ((Math.pow(1 + lpRate, yearsToRetire) - 1) / lpRate));
+    }
+    
+    const termYears = 85 - ageRetire;
+    let lpMonth = 0;
+    if (termYears > 0) {
+      // 提領期利率：使用面板設定的 mu (提領期報酬率)
+      const rMonth = mu / 12;
+      const nMonth = termYears * 12;
+      if (rMonth === 0) lpMonth = lpFuture / nMonth;
+      else lpMonth = (lpFuture * rMonth) / (1 - Math.pow(1 + rMonth, -nMonth));
+    }
+    
+    const baseIncome = liMonth + Math.round(lpMonth);
+    document.getElementById('res-base-income').innerText = `$${baseIncome.toLocaleString()}`;
+    
+    // 3. 有效支出地板 (Logic Floor)：運算時取 (輸入值, 基礎年金) 之大者
+    let effectiveSpend = Math.max(inputSpend, baseIncome);
+    // ==========================================
+    // [新版] 4. 蒙地卡羅 (含 80/90/100 歲存活計數)
+    // ==========================================
+    const simYears = 100 - ageRetire;
+    let trajectories = [];
+    
+    // 定義計數器：計算在該年齡時資產 > 0 的次數
+    let count80 = 0;
+    let count90 = 0;
+    let count100 = 0;
+
+    for (let i = 0; i < 1000; i++) {
+      let balance = capital;
+      let path = [balance];
+      
+      // 標記單次模擬中，各個里程碑是否達標
+      let alive80 = (ageRetire >= 80);
+      // 如果退休時已經超過80歲，預設存活
+      let alive90 = (ageRetire >= 90);
+      let alive100 = (ageRetire >= 100);
+      
+      for (let y = 1; y <= simYears; y++) {
+        let age = ageRetire + y;
+        let r = mu + sigma * randn_bm();
+        balance = balance * (1 + r);
+        
+        let gap = 0;
+        if (effectiveSpend > baseIncome) {
+            if (age < 85) gap = effectiveSpend - baseIncome;
+            else gap = effectiveSpend - liMonth; // 85歲後勞退歸零
+        } else {
+            if (age >= 85 && effectiveSpend > liMonth) gap = effectiveSpend - liMonth;
+        }
+        
+        balance -= (gap * 12);
+        if (balance < 0) balance = 0;
+
+        // 檢查里程碑：若該歲數時餘額 > 0，則標記存活
+        if (age === 80 && balance > 0) alive80 = true;
+        if (age === 90 && balance > 0) alive90 = true;
+        if (age === 100 && balance > 0) alive100 = true;
+
+        path.push(balance);
+      }
+      
+      // 累加成功次數
+      if (alive80) count80++;
+      if (alive90) count90++;
+      if (alive100) count100++;
+      
+      trajectories.push(path);
+    }
+
+    // 計算並顯示百分比 (除以10 = 除以1000 * 100)
+    document.getElementById('rate-80').innerText = (count80 / 10).toFixed(1) + '%';
+    document.getElementById('rate-90').innerText = (count90 / 10).toFixed(1) + '%';
+    document.getElementById('rate-100').innerText = (count100 / 10).toFixed(1) + '%';
+    
+    // 為了相容下方的 AI 建議邏輯，我們使用 100 歲的成功率作為基準
+    const successRate = count100 / 10;
+    
+    // [V83.10 FIX 2]：AI 雙重機率建議 (80% / 50%)
+    // 計算邏輯：根據當前缺口與成功率，按比例逆推安全邊際
+    let currentGap = Math.max(0, effectiveSpend - baseIncome);
+    // 穩健型 (80%)
+    let safeFactor = (successRate >= 80) ? (1 + (successRate-80)/100) : (successRate / 85);
+    let safeGap = currentGap * safeFactor;
+    optimalSafeCache = Math.floor(baseIncome + safeGap);
+    // 積極型 (50%)
+    let riskFactor = (successRate >= 50) ? (1 + (successRate-50)/80) : (successRate / 55);
+    let riskGap = currentGap * riskFactor;
+    optimalRiskCache = Math.floor(baseIncome + riskGap);
+    
+    document.getElementById('ai-suggestion-text').innerHTML = 
+      `<div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+         <span><span style="color:#06d6a0">● 穩健(80%):</span> <span style="font-weight:bold;color:#fff">$${optimalSafeCache.toLocaleString()}</span></span>
+         <button onclick="applyVal('safe')" style="border:1px solid #06d6a0;background:none;color:#06d6a0;border-radius:3px;cursor:pointer;padding:2px 5px;">套用</button>
+       </div>
+       <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+         <span><span style="color:#ffd166">● 積極(50%):</span> <span style="font-weight:bold;color:#fff">$${optimalRiskCache.toLocaleString()}</span></span>
+         <button onclick="applyVal('risk')" style="border:1px solid #ffd166;background:none;color:#ffd166;border-radius:3px;cursor:pointer;padding:2px 5px;">套用</button>
+       </div>`;
+       
+    if(typeof renderSimChart === 'function') renderSimChart(trajectories.slice(0, 50), ageRetire);
+  }
+
+  // 套用建議值輔助函數
+  function applyVal(type) {
+    let val = (type === 'safe') ? optimalSafeCache : optimalRiskCache;
+    if (val > 0) {
+      document.getElementById('monthlySpend').value = val;
+      runSimulation(); // 套用後立即運算
+    }
+  }
+
+  function renderSimChart(paths, startAge) {
+    const ctx = document.getElementById('mcChart').getContext('2d');
+    if (simChartInstance) simChartInstance.destroy();
+    const labels = Array.from({length: paths[0].length}, (_, i) => startAge + i);
+    simChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: labels, datasets: paths.map(p=>({ data: p, borderColor: 'rgba(100,255,218,0.1)', borderWidth: 1, pointRadius: 0, fill: false })) },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: {display:true, text:'自存金資產模擬 (1000次)', color:'#8892b0'} }, scales: { x: { ticks: { color: '#8892b0' } }, y: { ticks: { color: '#8892b0' }, grid: { color: '#233554' } } } }
+    });
+  }
+
+  // [修改] 原本為 google.script.run 寫回資料庫，現改為單機提示
+  function saveToSheet() {
+    alert('✅ 目前為高隱私雲端版，客戶數據不上傳，請直接參考畫面多次進行 80/50 建議試算。');
+  }
+</script>
+</body>
+</html>

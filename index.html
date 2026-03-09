@@ -191,20 +191,28 @@
     <div style="font-size:11px; color:#8892b0; margin-bottom:6px; letter-spacing:1px;">資產存續里程碑 (達成率)</div>
     <div style="display:flex; justify-content:space-between; gap:4px;">
       
-      <div style="flex:1; background:rgba(6, 214, 160, 0.1); border:1px solid rgba(6, 214, 160, 0.4); border-radius:6px; padding:6px 2px;">
-        <div style="font-size:10px; color:#06d6a0; margin-bottom:2px;">80 歲</div>
-        <div id="rate-80" style="font-size:15px; font-weight:bold; color:#06d6a0;">--%</div>
-      </div>
-
-      <div style="flex:1; background:rgba(255, 209, 102, 0.1); border:1px solid rgba(255, 209, 102, 0.4); border-radius:6px; padding:6px 2px;">
-        <div style="font-size:10px; color:#ffd166; margin-bottom:2px;">90 歲</div>
-        <div id="rate-90" style="font-size:15px; font-weight:bold; color:#ffd166;">--%</div>
-      </div>
-
-      <div style="flex:1; background:rgba(239, 71, 111, 0.1); border:1px solid rgba(239, 71, 111, 0.4); border-radius:6px; padding:6px 2px;">
-        <div style="font-size:10px; color:#ef476f; margin-bottom:2px;">100 歲</div>
-        <div id="rate-100" style="font-size:15px; font-weight:bold; color:#ef476f;">--%</div>
-      </div>
+      <div style="display:flex; justify-content:space-between; gap:4px;">
+                <div style="flex:1; background:rgba(6, 214, 160, 0.1); border:1px solid rgba(6, 214, 160, 0.4); border-radius:6px; padding:4px 2px;">
+                  <div style="font-size:10px; color:#06d6a0; margin-bottom:2px;">80 歲</div>
+                  <div id="rate-80" style="font-size:13px; font-weight:bold; color:#06d6a0;">--%</div>
+                </div>
+                <div style="flex:1; background:rgba(6, 214, 160, 0.1); border:1px solid rgba(6, 214, 160, 0.4); border-radius:6px; padding:4px 2px;">
+                  <div style="font-size:10px; color:#06d6a0; margin-bottom:2px;">85 歲</div>
+                  <div id="rate-85" style="font-size:13px; font-weight:bold; color:#06d6a0;">--%</div>
+                </div>
+                <div style="flex:1; background:rgba(255, 209, 102, 0.1); border:1px solid rgba(255, 209, 102, 0.4); border-radius:6px; padding:4px 2px;">
+                  <div style="font-size:10px; color:#ffd166; margin-bottom:2px;">90 歲</div>
+                  <div id="rate-90" style="font-size:13px; font-weight:bold; color:#ffd166;">--%</div>
+                </div>
+                <div style="flex:1; background:rgba(255, 209, 102, 0.1); border:1px solid rgba(255, 209, 102, 0.4); border-radius:6px; padding:4px 2px;">
+                  <div style="font-size:10px; color:#ffd166; margin-bottom:2px;">95 歲</div>
+                  <div id="rate-95" style="font-size:13px; font-weight:bold; color:#ffd166;">--%</div>
+                </div>
+                <div style="flex:1; background:rgba(239, 71, 111, 0.1); border:1px solid rgba(239, 71, 111, 0.4); border-radius:6px; padding:4px 2px;">
+                  <div style="font-size:10px; color:#ef476f; margin-bottom:2px;">100 歲</div>
+                  <div id="rate-100" style="font-size:13px; font-weight:bold; color:#ef476f;">--%</div>
+                </div>
+              </div>
 
     </div>
   </div>
@@ -542,7 +550,9 @@
     let trajectories = [];
     
     let count80 = 0;
+    let count85 = 0;
     let count90 = 0;
+    let count95 = 0;
     let count100 = 0;
 
     for (let i = 0; i < 1000; i++) {
@@ -550,7 +560,9 @@
       let path = [balance];
       
       let alive80 = (ageRetire >= 80);
+      let alive85 = (ageRetire >= 85);
       let alive90 = (ageRetire >= 90);
+      let alive95 = (ageRetire >= 95);
       let alive100 = (ageRetire >= 100);
       
       for (let y = 1; y <= simYears; y++) {
@@ -569,22 +581,30 @@
         balance -= (gap * 12);
         if (balance < 0) balance = 0;
 
+        // 新增 85 與 95 歲的判斷
         if (age === 80 && balance > 0) alive80 = true;
+        if (age === 85 && balance > 0) alive85 = true;
         if (age === 90 && balance > 0) alive90 = true;
+        if (age === 95 && balance > 0) alive95 = true;
         if (age === 100 && balance > 0) alive100 = true;
 
         path.push(balance);
       }
       
+      // 統計次數
       if (alive80) count80++;
+      if (alive85) count85++;
       if (alive90) count90++;
+      if (alive95) count95++;
       if (alive100) count100++;
       
       trajectories.push(path);
     }
 
     document.getElementById('rate-80').innerText = (count80 / 10).toFixed(1) + '%';
+    document.getElementById('rate-85').innerText = (count85 / 10).toFixed(1) + '%';
     document.getElementById('rate-90').innerText = (count90 / 10).toFixed(1) + '%';
+    document.getElementById('rate-95').innerText = (count95 / 10).toFixed(1) + '%';
     document.getElementById('rate-100').innerText = (count100 / 10).toFixed(1) + '%';
     
     const successRate = count100 / 10;
